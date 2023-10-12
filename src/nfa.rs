@@ -57,15 +57,18 @@ impl Nfa {
         nfa
     }
 
-    // pub fn catenation(self, rhs: Nfa) -> Self {
-    //     let mut nfa = Self::merge(&self, &rhs);
-    //     nfa.graph
-    //         .add_edge(nfa.initial_state, self.initial_state, None);
-    //     for sink in self.accepted_states() {
-    //         nfa.graph.add_edge(sink, rhs.initial_state, None);
-    //     }
-    //     nfa
-    // }
+    pub fn catenation(self, rhs: Nfa) -> Self {
+        let mut graph = merge_graph(&self.graph, &rhs.graph);
+        let initial_state = graph.add_node("".to_string());
+        graph.add_edge(self.initial_state, self.initial_state, None);
+        for sink in self.accepted_states() {
+            graph.add_edge(sink, rhs.initial_state, None);
+        }
+        Self {
+            graph,
+            initial_state,
+        }
+    }
 
     // pub fn alternation(self, rhs: Nfa) -> Self {}
 
@@ -107,6 +110,25 @@ mod tests {
             nfa.graph.edges(nfa.initial_state).next().unwrap().weight(),
             &Some('a')
         );
+    }
+
+    #[test]
+    fn test_catenation() {
+        let nfa_1 = Nfa::literal_character('a');
+        let nfa_2 = Nfa::literal_character('b');
+        let nfa = nfa_1.catenation(nfa_2);
+        assert_eq!(nfa.graph.node_count(), 5);
+        assert_eq!(nfa.graph.edge_count(), 4);
+        assert!(nfa
+            .graph
+            .edge_weights()
+            .find(|e| e.filter(|&w| w == 'a').is_some())
+            .is_some());
+        assert!(nfa
+            .graph
+            .edge_weights()
+            .find(|e| e.filter(|&w| w == 'b').is_some())
+            .is_some());
     }
 
     #[test]
