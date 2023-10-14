@@ -1,16 +1,14 @@
-use petgraph::{graph::NodeIndex, visit::EdgeRef, Graph};
+use petgraph::visit::EdgeRef;
+use petgraph::Graph;
 
 use crate::error::NfaError;
 
-type State = NodeIndex<u32>;
-type NodeLabel = String;
-type EdgeLabel = Option<char>;
-type NfaGraph = Graph<NodeLabel, EdgeLabel>;
+use super::{NfaGraph, State};
 
 pub struct Nfa {
-    graph: NfaGraph,
-    initial_state: State,
-    accepted_states: Vec<State>,
+    pub(super) graph: NfaGraph,
+    pub(super) initial_state: State,
+    pub(super) accepted_states: Vec<State>,
 }
 
 impl Nfa {
@@ -177,7 +175,7 @@ impl Nfa {
 }
 
 impl Nfa {
-    fn get_next_states(&self, cur: State) -> Vec<State> {
+    pub(super) fn get_next_states(&self, cur: State) -> Vec<State> {
         let mut stack = vec![cur];
         let mut next_states = vec![];
         while let Some(state) = stack.pop() {

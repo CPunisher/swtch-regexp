@@ -1,2 +1,2 @@
+pub mod automa;
 pub mod error;
-pub mod nfa;
