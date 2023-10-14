@@ -1,4 +1,4 @@
-use petgraph::{graph::NodeIndex, Graph};
+use petgraph::{graph::NodeIndex, visit::EdgeRef, Graph};
 
 use crate::error::NfaError;
 
@@ -177,6 +177,52 @@ impl Nfa {
 }
 
 impl Nfa {
+    fn get_next_states(&self, cur: State) -> Vec<State> {
+        let mut stack = vec![cur];
+        let mut next_states = vec![];
+        while let Some(state) = stack.pop() {
+            let mut has_weighted_edge = false;
+            if self.graph.edges(state).count() == 0 {
+                // Accept state
+                next_states.push(state);
+                continue;
+            }
+            for edge in self.graph.edges(state) {
+                if edge.weight().is_none() {
+                    stack.push(edge.target());
+                } else {
+                    has_weighted_edge = true;
+                }
+            }
+            if has_weighted_edge {
+                next_states.push(state)
+            }
+        }
+        next_states
+    }
+
+    pub fn test(&self, str: &str) -> bool {
+        let mut current_states = self.get_next_states(self.initial_state);
+        for c in str.chars() {
+            let mut next_states = Vec::new();
+            for state in current_states {
+                for edge in self.graph.edges(state) {
+                    if let Some(c_) = edge.weight() {
+                        if c == *c_ {
+                            next_states.extend(self.get_next_states(edge.target()));
+                        }
+                    }
+                }
+            }
+            current_states = next_states;
+        }
+        current_states
+            .iter()
+            .any(|&s| self.accepted_states.contains(&s))
+    }
+}
+
+impl Nfa {
     pub fn to_json(&self) -> String {
         serde_json::to_string(&self.graph).unwrap()
     }
@@ -257,9 +303,18 @@ mod tests {
 
     #[test]
     fn test_from_str() {
-        let nfa = Nfa::from_str("abb.+.a.");
-        assert!(nfa.is_ok());
         let nfa = Nfa::from_str("abb...");
         assert!(nfa.is_err());
+        let nfa = Nfa::from_str("abb.+.a.");
+        assert!(nfa.is_ok());
+    }
+
+    #[test]
+    fn test_test() {
+        let nfa = Nfa::from_str("abb.+.a.").unwrap();
+        assert!(nfa.test("abba"));
+        assert!(nfa.test("abbbbbbbba"));
+        assert!(!nfa.test("abbb"));
+        assert!(!nfa.test("ab"));
     }
 }
