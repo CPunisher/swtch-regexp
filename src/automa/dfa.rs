@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::RwLock};
+use std::{collections::HashMap, sync::Mutex};
 
 use petgraph::visit::EdgeRef;
 
@@ -8,14 +8,14 @@ use super::{Nfa, State};
 
 pub struct Dfa {
     nfa: Nfa,
-    next_state_cache: RwLock<HashMap<State, Vec<State>>>,
+    next_state_cache: Mutex<HashMap<State, Vec<State>>>,
 }
 
 impl Dfa {
     pub fn from_str(expr: &str) -> Result<Dfa, NfaError> {
         let dfa = Self {
             nfa: Nfa::from_str(expr)?,
-            next_state_cache: RwLock::new(HashMap::new()),
+            next_state_cache: Mutex::new(HashMap::new()),
         };
         Ok(dfa)
     }
@@ -29,13 +29,12 @@ impl Dfa {
 
 impl Dfa {
     fn get_next_states(&self, cur: State) -> Vec<State> {
-        let next_state_cache = self.next_state_cache.read().unwrap();
+        let mut next_state_cache = self.next_state_cache.lock().unwrap();
         if let Some(states) = next_state_cache.get(&cur) {
             return states.clone();
         }
         let states = self.nfa.get_next_states(cur);
 
-        let mut next_state_cache = self.next_state_cache.write().unwrap();
         next_state_cache.insert(cur, states.clone());
         states
     }
@@ -68,14 +67,14 @@ mod test {
 
     #[test]
     fn test_test() {
-        let nfa = Nfa::from_str("abb.+.a.").unwrap();
-        assert!(nfa.test("abba"));
-        assert!(nfa.test("abbbbbbbba"));
-        assert!(!nfa.test("abbb"));
-        assert!(!nfa.test("ab"));
+        let dfa = Dfa::from_str("abb.+.a.").unwrap();
+        assert!(dfa.test("abba"));
+        assert!(dfa.test("abbbbbbbba"));
+        assert!(!dfa.test("abbb"));
+        assert!(!dfa.test("ab"));
 
-        let nfa = Nfa::from_str("abab...abbb...|").unwrap();
-        assert!(nfa.test("abab"));
-        assert!(nfa.test("abbb"));
+        let dfa = Dfa::from_str("abab...abbb...|").unwrap();
+        assert!(dfa.test("abab"));
+        assert!(dfa.test("abbb"));
     }
 }
