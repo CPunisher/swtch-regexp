@@ -109,8 +109,8 @@ impl Nfa {
         }
         Self {
             graph,
-            initial_state: self.initial_state,
-            accepted_states: rhs.accepted_states,
+            initial_state: mapper1(self.initial_state),
+            accepted_states: rhs.accepted_states.iter().map(|&s| mapper2(s)).collect(),
         }
     }
 
@@ -173,6 +173,12 @@ impl Nfa {
             initial_state: self.initial_state,
             accepted_states: vec![new_state],
         }
+    }
+}
+
+impl Nfa {
+    pub fn to_json(&self) -> String {
+        serde_json::to_string(&self.graph).unwrap()
     }
 }
 
