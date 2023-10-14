@@ -316,5 +316,9 @@ mod tests {
         assert!(nfa.test("abbbbbbbba"));
         assert!(!nfa.test("abbb"));
         assert!(!nfa.test("ab"));
+
+        let nfa = Nfa::from_str("abab...abbb...|").unwrap();
+        assert!(nfa.test("abab"));
+        assert!(nfa.test("abbb"));
     }
 }
