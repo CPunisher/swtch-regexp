@@ -90,7 +90,7 @@ impl Nfa {
         stack.pop().ok_or_else(parse_error)
     }
 
-    pub fn literal_character(c: char) -> Self {
+    fn literal_character(c: char) -> Self {
         let mut graph = NfaGraph::new();
         let initial_state = graph.add_node("".to_string());
         let node = graph.add_node("".to_string());
@@ -102,7 +102,7 @@ impl Nfa {
         }
     }
 
-    pub fn catenation(self, rhs: Nfa) -> Self {
+    fn catenation(self, rhs: Nfa) -> Self {
         let (mut graph, mapper1, mapper2) = Self::merge(&self.graph, &rhs.graph);
         for sink in self.accepted_states {
             graph.add_edge(mapper1(sink), mapper2(rhs.initial_state), None);
@@ -114,7 +114,7 @@ impl Nfa {
         }
     }
 
-    pub fn alternation(self, rhs: Nfa) -> Self {
+    fn alternation(self, rhs: Nfa) -> Self {
         let (mut graph, mapper1, mapper2) = Self::merge(&self.graph, &rhs.graph);
         let initial_state = graph.add_node("".to_string());
         graph.add_edge(initial_state, mapper1(self.initial_state), None);
@@ -134,7 +134,7 @@ impl Nfa {
         }
     }
 
-    pub fn zero_or_one(self) -> Self {
+    fn zero_or_one(self) -> Self {
         let mut graph = self.graph.clone();
         let initial_state = graph.add_node("".to_string());
         graph.add_edge(initial_state, self.initial_state, None);
@@ -146,7 +146,7 @@ impl Nfa {
         }
     }
 
-    pub fn zero_or_more(self) -> Self {
+    fn zero_or_more(self) -> Self {
         let mut graph = self.graph.clone();
         let initial_state = graph.add_node("".to_string());
         graph.add_edge(initial_state, self.initial_state, None);
@@ -161,7 +161,7 @@ impl Nfa {
         }
     }
 
-    pub fn one_or_more(self) -> Self {
+    fn one_or_more(self) -> Self {
         let mut graph = self.graph.clone();
         let new_state = graph.add_node("".to_string());
         for sink in self.accepted_states {
