@@ -1,5 +1,7 @@
 use petgraph::{graph::NodeIndex, Graph};
 
+use crate::error::NfaError;
+
 type State = NodeIndex<u32>;
 type NodeLabel = String;
 type EdgeLabel = Option<char>;
@@ -53,6 +55,41 @@ impl Nfa {
 }
 
 impl Nfa {
+    pub fn from_str(expr: &str) -> Result<Nfa, NfaError> {
+        let parse_error = || NfaError::InvalidRegex(expr.to_string());
+        let mut stack: Vec<Nfa> = Vec::new();
+        for c in expr.chars() {
+            match c {
+                '.' => {
+                    let rhs = stack.pop().ok_or_else(parse_error)?;
+                    let lhs = stack.pop().ok_or_else(parse_error)?;
+                    stack.push(lhs.catenation(rhs));
+                }
+                '|' => {
+                    let rhs = stack.pop().ok_or_else(parse_error)?;
+                    let lhs = stack.pop().ok_or_else(parse_error)?;
+                    stack.push(lhs.alternation(rhs));
+                }
+                '?' => {
+                    let nfa = stack.pop().ok_or_else(parse_error)?;
+                    stack.push(nfa.zero_or_one());
+                }
+                '*' => {
+                    let nfa = stack.pop().ok_or_else(parse_error)?;
+                    stack.push(nfa.zero_or_more());
+                }
+                '+' => {
+                    let nfa = stack.pop().ok_or_else(parse_error)?;
+                    stack.push(nfa.one_or_more());
+                }
+                _ => {
+                    stack.push(Nfa::literal_character(c));
+                }
+            }
+        }
+        stack.pop().ok_or_else(parse_error)
+    }
+
     pub fn literal_character(c: char) -> Self {
         let mut graph = NfaGraph::new();
         let initial_state = graph.add_node("".to_string());
@@ -213,5 +250,10 @@ mod tests {
     }
 
     #[test]
-    fn test_from_str() {}
+    fn test_from_str() {
+        let nfa = Nfa::from_str("abb.+.a.");
+        assert!(nfa.is_ok());
+        let nfa = Nfa::from_str("abb...");
+        assert!(nfa.is_err());
+    }
 }
