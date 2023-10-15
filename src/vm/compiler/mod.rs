@@ -1,4 +1,4 @@
-use super::inst::Inst;
+use super::inst::{self, Inst};
 
 mod ast;
 mod error;
@@ -13,4 +13,10 @@ pub fn compile(expr: &str) -> Vec<Inst> {
     let mut transformer = transformer::Transformer::default();
     let ast = parser.parse_group().unwrap();
     transformer.transform(ast)
+}
+
+pub fn print_prog(insts: &[Inst]) {
+    for (i, inst) in insts.iter().enumerate() {
+        println!("{}: {}", i, inst);
+    }
 }
