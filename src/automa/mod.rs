@@ -1,6 +1,7 @@
 use petgraph::{graph::NodeIndex, Graph};
 
 mod dfa;
+mod error;
 mod nfa;
 
 pub use dfa::Dfa;

@@ -2,9 +2,7 @@ use std::{collections::HashMap, sync::Mutex};
 
 use petgraph::visit::EdgeRef;
 
-use crate::error::NfaError;
-
-use super::{Nfa, State};
+use super::{error::NfaError, Nfa, State};
 
 pub struct Dfa {
     nfa: Nfa,

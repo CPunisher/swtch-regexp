@@ -1,9 +1,7 @@
 use petgraph::visit::EdgeRef;
 use petgraph::Graph;
 
-use crate::error::NfaError;
-
-use super::{NfaGraph, State};
+use super::{error::NfaError, NfaGraph, State};
 
 pub struct Nfa {
     pub(super) graph: NfaGraph,
