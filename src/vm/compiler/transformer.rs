@@ -153,6 +153,9 @@ impl InstructGenerator {
             }
             match block {
                 InstBlock::Inst(inst) => {
+                    if matches!(inst, Inst::Noop) {
+                        continue;
+                    }
                     self.inst_list.push(inst.clone());
                 }
                 InstBlock::InstNodeIndex(id) => self.dfs(*id, nodes),
