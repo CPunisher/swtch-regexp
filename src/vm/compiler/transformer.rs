@@ -132,20 +132,8 @@ impl Transformer {
                 _ => {}
             }
         }
-        // Remove jmp instructions that jumps to the next line
-        generator
-            .inst_list
-            .into_iter()
-            .enumerate()
-            .filter(|(line, inst)| {
-                if let Inst::Jump(pc) = inst {
-                    return line + 1 != *pc;
-                }
-                true
-            })
-            .map(|(_, inst)| inst)
-            .chain(std::iter::once(Inst::Match))
-            .collect()
+        generator.inst_list.push(Inst::Match);
+        generator.inst_list
     }
 }
 

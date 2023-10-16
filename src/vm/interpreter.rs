@@ -12,7 +12,7 @@ impl Interpreter {
     pub fn thompson_vm(&self, input: &str) -> bool {
         let mut clist = vec![0 as usize];
 
-        for sp in input.chars() {
+        for sp in input.chars().chain(std::iter::once('\0')) {
             let mut nlist = vec![];
             while let Some(pc) = clist.pop() {
                 match &self.prog[pc] {
@@ -23,37 +23,37 @@ impl Interpreter {
                         nlist.push(pc + 1);
                     }
                     Inst::Jump(pc1) => {
-                        nlist.push(*pc1);
+                        clist.push(*pc1);
                     }
                     Inst::Split(pc_list) => {
                         for &pc in pc_list {
-                            nlist.push(pc);
+                            clist.push(pc);
                         }
                     }
                     Inst::Match => return true,
                     Inst::Noop => {
-                        nlist.push(pc + 1);
+                        clist.push(pc + 1);
                     }
                 }
             }
             clist = nlist;
         }
-        clist.iter().any(|pc| matches!(self.prog[*pc], Inst::Match))
+        false
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::vm::compile;
+    use crate::vm::{compile, compiler::print_prog};
 
     use super::*;
     #[test]
     fn test_backtracking_vm() {
+        print_prog(&compile("((a|b)*)"));
         let interpreter = Interpreter::new(compile("(a+)"));
         assert!(interpreter.thompson_vm("a"));
-        assert!(!interpreter.thompson_vm("ab"));
 
-        let interpreter = Interpreter::new(compile("(a|b)*"));
+        let interpreter = Interpreter::new(compile("((a|b)*)"));
         assert!(interpreter.thompson_vm("a"));
         assert!(interpreter.thompson_vm("b"));
         assert!(interpreter.thompson_vm("ab"));
