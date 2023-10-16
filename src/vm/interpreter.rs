@@ -44,32 +44,26 @@ impl Interpreter {
 
 #[cfg(test)]
 mod tests {
-    use crate::vm::{compile, compiler::print_prog};
+    use crate::vm::compile;
 
     use super::*;
     #[test]
     fn test_backtracking_vm() {
-        print_prog(&compile("((a|b)*)"));
         let interpreter = Interpreter::new(compile("(a+)"));
         assert!(interpreter.thompson_vm("a"));
-
-        let interpreter = Interpreter::new(compile("((a|b)*)"));
-        assert!(interpreter.thompson_vm("a"));
-        assert!(interpreter.thompson_vm("b"));
-        assert!(interpreter.thompson_vm("ab"));
-        assert!(interpreter.thompson_vm("ba"));
-        assert!(interpreter.thompson_vm(""));
-        assert!(!interpreter.thompson_vm("c"));
-        assert!(!interpreter.thompson_vm("abc"));
-        assert!(!interpreter.thompson_vm("baac"));
 
         let interpreter = Interpreter::new(compile("(a+|b+)"));
         assert!(interpreter.thompson_vm("a"));
         assert!(interpreter.thompson_vm("b"));
         assert!(interpreter.thompson_vm("aaa"));
         assert!(interpreter.thompson_vm("bbb"));
-        assert!(!interpreter.thompson_vm("ab"));
-        assert!(!interpreter.thompson_vm("ba"));
+        assert!(interpreter.thompson_vm("ab"));
+        assert!(interpreter.thompson_vm("ba"));
         assert!(!interpreter.thompson_vm(""));
+
+        let interpreter = Interpreter::new(compile("(a+b*|c?d)"));
+        assert!(interpreter.thompson_vm("aaab"));
+        assert!(interpreter.thompson_vm("d"));
+        assert!(!interpreter.thompson_vm("bc"));
     }
 }

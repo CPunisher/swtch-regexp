@@ -96,13 +96,16 @@ where
     }
 
     pub fn parse_term(&mut self) -> ParseResult<Term> {
-        let token = self.advance()?;
+        let token = *self.tokens.peek().ok_or(ParseError::UnexpectedEOF)?;
         match token {
             Token::LeftBracket => {
                 let group = self.parse_group()?;
                 Ok(Term::Group(group))
             }
-            Token::Char(c) => Ok(Term::Char(c)),
+            Token::Char(c) => {
+                self.advance()?;
+                Ok(Term::Char(c))
+            }
             _ => Err(ParseError::UnexpectedToken(token)),
         }
     }
@@ -117,6 +120,14 @@ mod tests {
     #[test]
     fn test_parser() {
         let lexer = Lexer::new("(a(b|c)*d)".chars());
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_group();
+        assert!(program.is_ok())
+    }
+
+    #[test]
+    fn test_error_1() {
+        let lexer = Lexer::new("((a|b)*)".chars());
         let mut parser = Parser::new(lexer);
         let program = parser.parse_group();
         assert!(program.is_ok())
